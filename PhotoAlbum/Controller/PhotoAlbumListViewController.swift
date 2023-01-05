@@ -72,6 +72,8 @@ final class PhotoAlbumListViewController: UIViewController {
     private func configureNavigation() {
         self.navigationController?.navigationBar.titleTextAttributes = [.foregroundColor : UIColor.black]
         self.navigationItem.title = "앨범"
+        self.navigationItem.backButtonTitle = ""
+        self.navigationController?.navigationBar.tintColor = .black
     }
     
     //MARK: - AddSubView
@@ -113,5 +115,12 @@ extension PhotoAlbumListViewController: UITableViewDelegate, UITableViewDataSour
         }
         
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let assets = PHAsset.fetchAssets(in: albumList[indexPath.row], options: nil)
+        let albumVC = AlbumViewController(assets)
+        albumVC.navigationItem.title = albumList[indexPath.row].localizedTitle
+        self.navigationController?.pushViewController(albumVC, animated: true)
     }
 }
