@@ -39,9 +39,8 @@ final class PhotoAlbumListViewController: UIViewController {
         if PHPhotoLibrary.authorizationStatus(for: .readWrite) != .authorized {
             PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
                 switch status {
-                case .authorized: print("authorized");self.getPhotoAlbumListInfo()
-                case .limited: print("limited") // 몇가지 사진에 대해서만 허용
-                default : self.showAuthAlert()
+                case .authorized: print("authorized"); self.getPhotoAlbumListInfo()
+                default: self.showAuthAlert()
                 }
             }
         } else {
@@ -64,7 +63,7 @@ final class PhotoAlbumListViewController: UIViewController {
     }
     
     private func getPhotoAlbumListInfo() {
-        PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil).enumerateObjects { collection,_,_ in
+        PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: nil).enumerateObjects { collection,_,_ in
             self.albumList.append(collection)
         }
     }
@@ -103,22 +102,33 @@ extension PhotoAlbumListViewController: UITableViewDelegate, UITableViewDataSour
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: AlbumListCell.identifier, for: indexPath) as! AlbumListCell
-        cell.selectionStyle = .none
-        cell.titleLabel.text = self.albumList[indexPath.row].localizedTitle ?? "error"
-        cell.photoCountLabel.text = String(self.albumList[indexPath.row].estimatedAssetCount)
-        
         let option = PHFetchOptions()
-        option.fetchLimit = 1
-        let asset = PHAsset.fetchAssets(in: albumList[indexPath.row], options: option).firstObject!
-        PHImageManager().requestImage(for: asset, targetSize: .init(width: 70, height: 70), contentMode: .aspectFit, options: nil) { image, _ in
-            cell.thumbnailImageView.image = image
-        }
+        option.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
+        option.sortDescriptors = [.init(key: "creationDate", ascending: false)] // 최근순
         
+        cell.titleLabel.text = self.albumList[indexPath.row].localizedTitle ?? "error"
+        cell.photoCountLabel.text = String(PHAsset.fetchAssets(in: self.albumList[indexPath.row], options: option).count)
+
+        option.fetchLimit = 1
+        if let asset = PHAsset.fetchAssets(in: albumList[indexPath.row], options: option).firstObject {
+            let manager = PHImageManager.default()
+            let option = PHImageRequestOptions()
+            option.deliveryMode = .opportunistic
+            
+            manager.requestImage(for: asset, targetSize: .init(width: 70, height: 70), contentMode: .aspectFit, options: option) { image, _ in
+                cell.thumbnailImageView.image = image
+            }
+        }
+            
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let assets = PHAsset.fetchAssets(in: albumList[indexPath.row], options: nil)
+        let option = PHFetchOptions()
+        option.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
+        option.sortDescriptors = [.init(key: "creationDate", ascending: false)] // 최근순
+        let assets = PHAsset.fetchAssets(in: albumList[indexPath.row], options: option)
+        
         let albumVC = AlbumViewController(assets)
         albumVC.navigationItem.title = albumList[indexPath.row].localizedTitle
         self.navigationController?.pushViewController(albumVC, animated: true)
