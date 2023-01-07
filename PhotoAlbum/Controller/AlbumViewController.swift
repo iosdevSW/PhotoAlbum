@@ -51,7 +51,7 @@ final class AlbumViewController: UIViewController {
     private func addSubView() {
         self.view.addSubview(self.photoCollectionView)
     }
-
+    
     //MARK: - Layout
     private func layout() {
         NSLayoutConstraint.activate([
@@ -70,10 +70,14 @@ extension AlbumViewController: UICollectionViewDelegate, UICollectionViewDataSou
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: AlbumCell.identifier, for: indexPath) as! AlbumCell
-        PHImageManager().requestImage(for: self.assets[indexPath.row],
-                                      targetSize: CGSize(width: self.cellSize*2, height: self.cellSize*2),
-                                      contentMode: .default,
-                                      options: nil) { image, _ in
+        let manager = PHImageManager.default()
+        let option = PHImageRequestOptions()
+        option.deliveryMode = .opportunistic
+        
+        manager.requestImage(for: self.assets[indexPath.row],
+                             targetSize: CGSize(width: self.cellSize*2, height: self.cellSize*2),
+                             contentMode: .aspectFill,
+                             options: option) { image, _ in
             cell.imageView.image = image
         }
         

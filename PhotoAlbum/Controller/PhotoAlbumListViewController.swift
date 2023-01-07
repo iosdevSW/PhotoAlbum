@@ -111,7 +111,11 @@ extension PhotoAlbumListViewController: UITableViewDelegate, UITableViewDataSour
 
         option.fetchLimit = 1
         if let asset = PHAsset.fetchAssets(in: albumList[indexPath.row], options: option).firstObject {
-            PHImageManager().requestImage(for: asset, targetSize: .init(width: 70, height: 70), contentMode: .aspectFit, options: nil) { image, _ in
+            let manager = PHImageManager.default()
+            let option = PHImageRequestOptions()
+            option.deliveryMode = .opportunistic
+            
+            manager.requestImage(for: asset, targetSize: .init(width: 70, height: 70), contentMode: .aspectFit, options: option) { image, _ in
                 cell.thumbnailImageView.image = image
             }
         }
