@@ -53,6 +53,10 @@ final class AlbumListCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        self.thumbnailImageView.image = nil
+    }
+    
     //MARK: - AddSubView
     private func addSubView() {
         self.addSubview(self.thumbnailImageView)

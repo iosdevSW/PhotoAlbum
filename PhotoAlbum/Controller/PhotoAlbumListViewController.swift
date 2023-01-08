@@ -39,7 +39,7 @@ final class PhotoAlbumListViewController: UIViewController {
         if PHPhotoLibrary.authorizationStatus(for: .readWrite) != .authorized {
             PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
                 switch status {
-                case .authorized: print("authorized"); self.getPhotoAlbumListInfo()
+                case .authorized: self.getPhotoAlbumListInfo()
                 default: self.showAuthAlert()
                 }
             }
@@ -106,11 +106,13 @@ extension PhotoAlbumListViewController: UITableViewDelegate, UITableViewDataSour
         option.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
         option.sortDescriptors = [.init(key: "creationDate", ascending: false)] // 최근순
         
+        let assets = PHAsset.fetchAssets(in: self.albumList[indexPath.row], options: option)
+        
+        cell.prepareForReuse()
         cell.titleLabel.text = self.albumList[indexPath.row].localizedTitle ?? "error"
-        cell.photoCountLabel.text = String(PHAsset.fetchAssets(in: self.albumList[indexPath.row], options: option).count)
+        cell.photoCountLabel.text = String(assets.count)
 
-        option.fetchLimit = 1
-        if let asset = PHAsset.fetchAssets(in: albumList[indexPath.row], options: option).firstObject {
+        if let asset = assets.firstObject {
             let manager = PHImageManager.default()
             let option = PHImageRequestOptions()
             option.deliveryMode = .opportunistic
